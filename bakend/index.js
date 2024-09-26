@@ -58,9 +58,13 @@ io.on('connection', (socket) => {
         console.log('A user disconnected:', socket.username || 'Anonymous');
     });
 });
-app.get('/api/users', (req, res) => {
-  // to-do
-});
+// routes
+let users= require('./routes/basic/api')
+// use postman
+app.use('/api/users',users)
+// app.get('/api/users', (req, res) => {
+//   // to-do
+// });
 
 // Start the server
 const PORT = process.env.PORT || 9000;

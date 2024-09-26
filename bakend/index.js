@@ -18,10 +18,10 @@ if (fs.existsSync(CHAT_FILE)) {
     chatHistory = JSON.parse(data);
     //emit last 10 massages
     if (chatHistory.length > 10) {
-        chatHistory= chatHistory.slice((chatHistory.length - 10), chatHistory.length)
+        chatHistory = chatHistory.slice((chatHistory.length - 10), chatHistory.length)
     }
     console.log(chatHistory.length);
-    
+
 }
 
 // Serve static files (for client-side)
@@ -46,7 +46,7 @@ io.on('connection', (socket) => {
         const messageData = {
             id: socket.id,
             username: socket.username || 'Anonymous',
-            status:socket.status,
+            status: socket.status,
             message: msg,
             timestamp: new Date()
         };
@@ -54,21 +54,36 @@ io.on('connection', (socket) => {
         // Add message to chat history
         chatHistory.push(messageData);
 
-        console.log('new length :::',chatHistory.length)
+        console.log('new length :::', chatHistory.length)
         // Save chat history to the file
         fs.writeFileSync(CHAT_FILE, JSON.stringify(chatHistory, null, 2));
 
         // Broadcast message to all clients
         io.emit('chat message', messageData);
         if (chatHistory.length > 10) {
-            
+
             // io.emit('chat history', chatHistory);
         }
     });
 
+    // var clients = io.of().clients();
+    
     // Handle user disconnect
     socket.on('disconnect', () => {
         console.log('A user disconnected:', socket.username || 'Anonymous');
+        let chatHistory = [];
+        if (fs.existsSync(CHAT_FILE)) {
+            const data = fs.readFileSync(CHAT_FILE);
+            chatHistory = JSON.parse(data);
+
+            chatHistory.forEach(element => {
+                if (element.username == socket.username) {
+                    element.status = 'disconnect'
+                }
+                fs.writeFileSync(CHAT_FILE, JSON.stringify(chatHistory, null, 2));
+            });
+        }
+
     });
 });
 // routes

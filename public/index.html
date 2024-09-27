@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <!-- Link to the external CSS file -->
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <div class="chat-container">
         <div class="chat-header">Chat Application</div>
@@ -45,7 +47,7 @@
         // Display chat history on load
         socket.on('chat history', (messages) => {
             const messageList = document.getElementById('messages');
-            messages.forEach((msg) => {
+            messages.slice(-10).forEach((msg) => {
                 const li = document.createElement('li');
                 li.classList.add('message');
                 li.innerHTML = `<span class="username">${msg.username}:</span> ${msg.message} <span class="timestamp">[${new Date(msg.timestamp).toLocaleTimeString()}]</span>`;
@@ -56,6 +58,11 @@
         // Add message to the list when received
         socket.on('chat message', (msg) => {
             const messageList = document.getElementById('messages');
+            const numberOfMessages = document.getElementsByClassName("message").length;
+            const firstMessage = document.getElementsByClassName("message")[0];
+            if (numberOfMessages >= 10) {
+                firstMessage.remove();
+            }
             const li = document.createElement('li');
             li.classList.add('message');
             li.innerHTML = `<span class="username">${msg.username}:</span> ${msg.message} <span class="timestamp">[${new Date(msg.timestamp).toLocaleTimeString()}]</span>`;
@@ -75,4 +82,5 @@
         });
     </script>
 </body>
+
 </html>

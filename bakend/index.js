@@ -8,6 +8,9 @@ const path = require('path');
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
+let mongoose = require('mongoose');
+
+// mongoose.connect('mongodb://localhost:27017/hamrahAcademiTest').catch(error => console.log(error));
 
 const CHAT_FILE = path.join(__dirname, 'chatData.json');
 
@@ -16,6 +19,12 @@ let chatHistory = [];
 if (fs.existsSync(CHAT_FILE)) {
     const data = fs.readFileSync(CHAT_FILE);
     chatHistory = JSON.parse(data);
+    //emit last 10 massages
+    if (chatHistory.length > 10) {
+        chatHistory = chatHistory.slice((chatHistory.length - 10), chatHistory.length)
+    }
+    console.log(chatHistory.length);
+
 }
 
 // Serve static files (for client-side)
@@ -28,6 +37,7 @@ io.on('connection', (socket) => {
     // Expect the client to send a username
     socket.on('set username', (username) => {
         socket.username = username;
+        socket.status = 'connected'
         console.log(`${username} connected`);
 
         // Send the chat history to the new user
@@ -39,6 +49,7 @@ io.on('connection', (socket) => {
         const messageData = {
             id: socket.id,
             username: socket.username || 'Anonymous',
+            status: socket.status,
             message: msg,
             timestamp: new Date()
         };
@@ -46,21 +57,49 @@ io.on('connection', (socket) => {
         // Add message to chat history
         chatHistory.push(messageData);
 
+        console.log('new length :::', chatHistory.length)
         // Save chat history to the file
         fs.writeFileSync(CHAT_FILE, JSON.stringify(chatHistory, null, 2));
 
         // Broadcast message to all clients
         io.emit('chat message', messageData);
+        if (chatHistory.length > 10) {
+
+            // io.emit('chat history', chatHistory);
+        }
     });
 
+    // var clients = io.of().clients();
+    
     // Handle user disconnect
     socket.on('disconnect', () => {
         console.log('A user disconnected:', socket.username || 'Anonymous');
+        let chatHistory = [];
+        if (fs.existsSync(CHAT_FILE)) {
+            const data = fs.readFileSync(CHAT_FILE);
+            chatHistory = JSON.parse(data);
+
+            chatHistory.forEach(element => {
+                if (element.username == socket.username) {
+                    element.status = 'disconnect'
+                }
+                fs.writeFileSync(CHAT_FILE, JSON.stringify(chatHistory, null, 2));
+            });
+        }
+
     });
 });
-app.get('/api/users', (req, res) => {
-  // to-do
-});
+// routes
+let basicUsers = require('./routes/basic/api');
+// use postman
+app.use('/api/basicUsers', basicUsers)
+
+// let extraUsers = require('./routes/extra/user');
+// use postman
+// app.use('/api/ExtraUsers', extraUsers)
+// app.get('/api/users', (req, res) => {
+//   // to-do
+// });
 
 // Start the server
 const PORT = process.env.PORT || 9000;

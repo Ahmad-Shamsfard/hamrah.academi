@@ -8,6 +8,9 @@ const path = require('path');
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
+let mongoose = require('mongoose');
+
+// mongoose.connect('mongodb://localhost:27017/hamrahAcademiTest').catch(error => console.log(error));
 
 const CHAT_FILE = path.join(__dirname, 'chatData.json');
 
@@ -87,9 +90,13 @@ io.on('connection', (socket) => {
     });
 });
 // routes
-let users = require('./routes/basic/api');
+let basicUsers = require('./routes/basic/api');
 // use postman
-app.use('/api/users', users)
+app.use('/api/basicUsers', basicUsers)
+
+// let extraUsers = require('./routes/extra/user');
+// use postman
+// app.use('/api/ExtraUsers', extraUsers)
 // app.get('/api/users', (req, res) => {
 //   // to-do
 // });
